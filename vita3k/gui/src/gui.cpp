@@ -151,6 +151,7 @@ static void init_style(EmuEnvState &emuenv) {
 
 static void init_font(GuiState &gui, EmuEnvState &emuenv) {
     ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
     // Set Large Font
     constexpr ImWchar large_font_chars[] = { L'0', L'1', L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9', L':', L'A', L'M', L'P', 0 };

@@ -12,7 +12,7 @@
       "description": "Base hidden preset to set general options",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "USE_DISCORD_RICH_PRESENCE": true
+        "USE_DISCORD_RICH_PRESENCE": false
       }
     },
     {

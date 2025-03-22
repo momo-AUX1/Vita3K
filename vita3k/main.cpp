@@ -38,6 +38,7 @@
 #include <renderer/shaders.h>
 #include <renderer/state.h>
 #include <shader/spirv_recompiler.h>
+#include <glad/glad.h>
 #include <util/log.h>
 #include <util/string_utils.h>
 
@@ -55,6 +56,51 @@
 #include <cstdlib>
 #include <thread>
 #include <tracy/Tracy.hpp>
+
+
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT __attribute__((visibility("default")))
+#endif
+
+xtern "C" EXPORT int external_main(SDL_Window* host_window, SDL_GLContext host_context, int argc, char* argv[])
+{
+    if (SDL_GL_MakeCurrent(host_window, host_context) != 0) {
+        fprintf(stderr, "[external_main] SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        fprintf(stderr, "[external_main] Failed to load OpenGL functions via GLAD.\n");
+        return -1;
+    }
+    fprintf(stdout, "[external_main] Successfully loaded OpenGL via GLAD.\n");
+
+    if (argc >= 3) {
+#ifdef _WIN32
+        if (_putenv_s("LOCAL_STATE_PATH", argv[2]) != 0) {
+            fprintf(stderr, "[external_main] Failed to set LOCAL_STATE_PATH env var.\n");
+        } else {
+            printf("[external_main] LOCAL_STATE_PATH set to %s\n", argv[2]);
+        }
+#else
+        if (setenv("LOCAL_STATE_PATH", argv[2], 1) != 0) {
+            fprintf(stderr, "[external_main] Failed to set LOCAL_STATE_PATH env var.\n");
+        } else {
+            printf("[external_main] LOCAL_STATE_PATH set to %s\n", argv[2]);
+        }
+#endif
+    }
+
+    printf("[external_main] GL context is active; continuing Vita3K flow...\n");
+
+    int new_argc = 1;
+    char arg0[] = "vita3k";
+    char* new_argv[] = { arg0, nullptr };
+
+    return main(new_argc, new_argv);
+}
 
 static void run_execv(char *argv[], EmuEnvState &emuenv) {
     char const *args[10];
@@ -190,10 +236,10 @@ int main(int argc, char *argv[]) {
 #ifdef _WIN32
         SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1");
 #endif
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
+        /*if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
             app::error_dialog("SDL initialisation failed.");
             return SDLInitFailed;
-        }
+        }*/
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     }
 

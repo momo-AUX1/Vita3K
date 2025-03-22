@@ -180,9 +180,17 @@ void init_paths(Root &root_paths) {
     } else {
         // SDL_GetPrefPath is deferred as it creates the directory.
         // When using a portable directory, it is not needed.
-        auto sdl_pref_path = SDL_GetPrefPath(org_name, app_name);
-        auto pref_path = fs_utils::utf8_to_path(sdl_pref_path);
-        SDL_free(sdl_pref_path);
+        const char* local_state_ptr = std::getenv("LOCAL_STATE_PATH");
+        fs::path pref_path;
+        if (local_state_ptr && *local_state_ptr) {
+            pref_path = fs_utils::utf8_to_path(local_state_ptr);
+            LOG_INFO("Using LOCAL_STATE_PATH for pref path: {}", pref_path.string());
+        } else {
+            auto sdl_pref_path = "E:/";//SDL_GetPrefPath(org_name, app_name);
+            pref_path = fs_utils::utf8_to_path(sdl_pref_path);
+            //SDL_free(sdl_pref_path);
+            LOG_INFO("Using E:/ for pref path: {}", pref_path.string());
+        }
 
 #if defined(__APPLE__)
         // Store other data in the user-wide path. Otherwise we may end up dumping
@@ -415,7 +423,10 @@ bool init(EmuEnvState &state, Config &cfg, const Root &root_paths) {
     }
 #endif
 
-    state.window = WindowPtr(SDL_CreateWindow(window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DEFAULT_RES_WIDTH * state.manual_dpi_scale, DEFAULT_RES_HEIGHT * state.manual_dpi_scale, window_type | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI), SDL_DestroyWindow);
+    SDL_Window* existing_window = SDL_GL_GetCurrentWindow();
+    auto null_deleter = [](SDL_Window* /*unused*/) {};
+    state.window = WindowPtr(existing_window, null_deleter);
+
 
     if (!state.window) {
         LOG_ERROR("SDL failed to create window!");
@@ -424,10 +435,10 @@ bool init(EmuEnvState &state, Config &cfg, const Root &root_paths) {
 
 #ifdef _WIN32
     // Disable round corners for the game window
-    SDL_SysWMinfo wm_info;
+    /*SDL_SysWMinfo wm_info;
     SDL_VERSION(&wm_info.version);
     SDL_GetWindowWMInfo(state.window.get(), &wm_info);
-    const auto window_preference = DWMWCP_DONOTROUND;
+    const auto window_preference = DWMWCP_DONOTROUND;*/
     //DwmSetWindowAttribute(wm_info.info.win.window, DWMWA_WINDOW_CORNER_PREFERENCE, &window_preference, sizeof(window_preference));
 #endif
 

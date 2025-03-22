@@ -180,9 +180,9 @@ void init_paths(Root &root_paths) {
     } else {
         // SDL_GetPrefPath is deferred as it creates the directory.
         // When using a portable directory, it is not needed.
-        auto sdl_pref_path = "E:/";//SDL_GetPrefPath(org_name, app_name);
+        auto sdl_pref_path = SDL_GetPrefPath(org_name, app_name);
         auto pref_path = fs_utils::utf8_to_path(sdl_pref_path);
-        //SDL_free(sdl_pref_path);
+        SDL_free(sdl_pref_path);
 
 #if defined(__APPLE__)
         // Store other data in the user-wide path. Otherwise we may end up dumping
